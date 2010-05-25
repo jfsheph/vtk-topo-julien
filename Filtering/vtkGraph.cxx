@@ -1551,6 +1551,7 @@ void vtkGraph::RemoveVertexInternal(vtkIdType v, bool directed)
     {
     double x[3];
     this->Points->GetPoint(lv, x);
+//    this->Points->GetPoint(lv);
     this->Points->SetPoint(v, x);
     this->Points->SetNumberOfPoints(lv);
     }
