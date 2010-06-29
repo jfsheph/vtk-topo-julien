@@ -26,6 +26,7 @@
 #include  "vtkPolyDataMapper.h"
 #include  "vtkPolyDataToReebGraphFilter.h"
 #include  "vtkProperty.h"
+#include  "vtkPNGWriter.h"
 #include  "vtkReebGraphSurfaceSkeletonFilter.h"
 #include  "vtkReebGraphSimplificationFilter.h"
 #include  "vtkReebGraphVolumeSkeletonFilter.h"
@@ -36,6 +37,7 @@
 #include  "vtkUnstructuredGrid.h"
 #include  "vtkUnstructuredGridToReebGraphFilter.h"
 #include  "vtkVolumeContourSpectrumFilter.h"
+#include  "vtkWindowToImageFilter.h"
 
 // loading code generated automatically.
 // put whatever mesh you like here.
@@ -4428,8 +4430,23 @@ int DisplaySurfaceSkeleton(vtkPolyData *surfaceMesh, vtkTable *skeleton)
   renderer->AddActor(skeletonActor);
 
   windowInteractor->Initialize();
+
+  // Interactive mode
   //windowInteractor->Start();
+
+  // Testing mode
   windowInteractor->Render();
+  vtkWindowToImageFilter *windowToImage = vtkWindowToImageFilter::New();
+  windowToImage->SetInput(renderWindow);
+
+  vtkPNGWriter *pngWriter = vtkPNGWriter::New();
+  pngWriter->SetInputConnection(windowToImage->GetOutputPort());
+  pngWriter->SetFileName("TestReebGraph2D.png");
+  pngWriter->Write();
+
+  pngWriter->Delete();
+  windowToImage->Delete();
+  // End of testing mode
 
   skeletonActor->Delete();
   lineMapper->Delete();
@@ -4536,8 +4553,23 @@ int DisplayVolumeSkeleton(vtkUnstructuredGrid *volumeMesh, vtkTable *skeleton)
   renderer->AddActor(skeletonActor);
 
   windowInteractor->Initialize();
+
+  // Interactive mode
   //windowInteractor->Start();
+
+  // Testing mode
   windowInteractor->Render();
+  vtkWindowToImageFilter *windowToImage = vtkWindowToImageFilter::New();
+  windowToImage->SetInput(renderWindow);
+
+  vtkPNGWriter *pngWriter = vtkPNGWriter::New();
+  pngWriter->SetInputConnection(windowToImage->GetOutputPort());
+  pngWriter->SetFileName("TestReebGraph3D.png");
+  pngWriter->Write();
+
+  pngWriter->Delete();
+  windowToImage->Delete();
+  // End of testing mode
 
   skeletonActor->Delete();
   lineMapper->Delete();
@@ -4584,7 +4616,8 @@ int TestReebGraph( int argc, char* argv[] )
   surfaceReebGraphFilter->Update();
   vtkReebGraph *surfaceReebGraph = surfaceReebGraphFilter->GetOutput();
   cout << "      Test 2D.1 ";
-  if(surfaceReebGraph->GetNumberOfEdges())
+
+  if(surfaceReebGraph->GetNumberOfEdges() == 10)
     cout << "OK!" << endl;
   else
     {
@@ -4615,7 +4648,7 @@ int TestReebGraph( int argc, char* argv[] )
   metric->Delete();
  
   cout << "      Test 2D.2 ";
-  if(simplifiedSurfaceReebGraph->GetNumberOfEdges())
+  if(simplifiedSurfaceReebGraph->GetNumberOfEdges() == 10)
     cout << "OK!" << endl;
   else
     {
@@ -4644,7 +4677,7 @@ int TestReebGraph( int argc, char* argv[] )
   vtkTable *surfaceSkeleton = surfaceSkeletonFilter->GetOutput();
   errorCode = DisplaySurfaceSkeleton(surfaceMesh, surfaceSkeleton);
   cout << "      Test 2D.4 ";
-  if(surfaceSkeleton->GetNumberOfColumns())
+  if(surfaceSkeleton->GetNumberOfColumns() == 10)
     cout << "OK!" << endl;
   else
     {
@@ -4661,7 +4694,7 @@ int TestReebGraph( int argc, char* argv[] )
   areaSpectrumFilter->Update();
   vtkTable *areaSpectrum = areaSpectrumFilter->GetOutput();
   cout << "      Test 2D.5 ";
-  if(areaSpectrum->GetNumberOfRows())
+  if(areaSpectrum->GetNumberOfRows() == 100)
     cout << "OK!" << endl;
   else
     {
@@ -4704,7 +4737,7 @@ int TestReebGraph( int argc, char* argv[] )
   volumeReebGraphFilter->Update();
   vtkReebGraph *volumeReebGraph = volumeReebGraphFilter->GetOutput();
   cout << "      Test 3D.1 ";
-  if(volumeReebGraph->GetNumberOfEdges())
+  if(volumeReebGraph->GetNumberOfEdges() == 10)
     cout << "OK!" << endl;
   else
     {
@@ -4722,7 +4755,7 @@ int TestReebGraph( int argc, char* argv[] )
   volumeSimplification->Update();
   vtkReebGraph *simplifiedVolumeReebGraph = volumeSimplification->GetOutput();
   cout << "      Test 3D.2 ";
-  if(simplifiedVolumeReebGraph->GetNumberOfEdges())
+  if(simplifiedVolumeReebGraph->GetNumberOfEdges() == 10)
     cout << "OK!" << endl;
   else
     {
@@ -4750,7 +4783,7 @@ int TestReebGraph( int argc, char* argv[] )
   vtkTable *volumeSkeleton = volumeSkeletonFilter->GetOutput();
   errorCode = DisplayVolumeSkeleton(volumeMesh, volumeSkeleton);
   cout << "      Test 3D.4 ";
-  if(volumeSkeleton->GetNumberOfColumns())
+  if(volumeSkeleton->GetNumberOfColumns() == 10)
     cout << "OK!" << endl;
   else
     {
@@ -4768,7 +4801,7 @@ int TestReebGraph( int argc, char* argv[] )
   volumeSpectrumFilter->Update();
   vtkTable *volumeSpectrum = volumeSpectrumFilter->GetOutput();
   cout << "      Test 3D.5 ";
-  if(volumeSpectrum->GetNumberOfRows())
+  if(volumeSpectrum->GetNumberOfRows() == 100)
     cout << "OK!" << endl;
   else
     {
