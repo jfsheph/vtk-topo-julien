@@ -29,6 +29,7 @@
 #include  "vtkPNGWriter.h"
 #include  "vtkReebGraphSurfaceSkeletonFilter.h"
 #include  "vtkReebGraphSimplificationFilter.h"
+#include  "vtkReebGraphToJoinSplitTreeFilter.h"
 #include  "vtkReebGraphVolumeSkeletonFilter.h"
 #include  "vtkRenderer.h"
 #include  "vtkRenderWindow.h"
@@ -4604,7 +4605,11 @@ int TestReebGraph( int argc, char* argv[] )
     {
     double *p = (double *) malloc(sizeof(double)*3);
     surfaceMesh->GetPoint(vId, p);
-    surfaceScalarField->SetTuple1(vId, p[1]);
+    double scalarValue = p[1];
+    // add a bit of noise for the split tree test
+    if(vId == 2) scalarValue -= 10*scalarValue;
+
+    surfaceScalarField->SetTuple1(vId, scalarValue);
     free(p);
     }
   surfaceMesh->GetPointData()->SetScalars(surfaceScalarField);
@@ -4617,7 +4622,7 @@ int TestReebGraph( int argc, char* argv[] )
   vtkReebGraph *surfaceReebGraph = surfaceReebGraphFilter->GetOutput();
   cout << "      Test 2D.1 ";
 
-  if(surfaceReebGraph->GetNumberOfEdges() == 10)
+  if(surfaceReebGraph->GetNumberOfEdges() == 12)
     cout << "OK!" << endl;
   else
     {
@@ -4642,13 +4647,13 @@ int TestReebGraph( int argc, char* argv[] )
   surfaceSimplification->SetSimplificationMetric(metric);
 
   surfaceSimplification->SetInput(surfaceReebGraph);
-  surfaceSimplification->SetSimplificationThreshold(0.05);
+  surfaceSimplification->SetSimplificationThreshold(0.01);
   surfaceSimplification->Update();
   vtkReebGraph *simplifiedSurfaceReebGraph = surfaceSimplification->GetOutput();
   metric->Delete();
  
   cout << "      Test 2D.2 ";
-  if(simplifiedSurfaceReebGraph->GetNumberOfEdges() == 10)
+  if(simplifiedSurfaceReebGraph->GetNumberOfEdges() == 12)
     cout << "OK!" << endl;
   else
     {
@@ -4677,7 +4682,7 @@ int TestReebGraph( int argc, char* argv[] )
   vtkTable *surfaceSkeleton = surfaceSkeletonFilter->GetOutput();
   errorCode = DisplaySurfaceSkeleton(surfaceMesh, surfaceSkeleton);
   cout << "      Test 2D.4 ";
-  if(surfaceSkeleton->GetNumberOfColumns() == 10)
+  if(surfaceSkeleton->GetNumberOfColumns() == 12)
     cout << "OK!" << endl;
   else
     {
@@ -4702,12 +4707,33 @@ int TestReebGraph( int argc, char* argv[] )
     return EXIT_FAILURE;
     }
 
+
+  cout << "   Test 2D.6 Reeb graph to split tree filter..." << endl;
+  vtkReebGraphToJoinSplitTreeFilter *splitTreeFilter =
+    vtkReebGraphToJoinSplitTreeFilter::New();
+  splitTreeFilter->SetInput(0, surfaceMesh);
+  splitTreeFilter->SetInput(1, simplifiedSurfaceReebGraph);
+  splitTreeFilter->SetIsSplitTree(true);
+  splitTreeFilter->Update();
+  vtkReebGraph *splitTree = splitTreeFilter->GetOutput();
+  DisplayReebGraph(splitTree);
+  cout << "      Test 2D.6 ";
+  if(splitTree->GetNumberOfEdges() == 3)
+    cout << "OK!" << endl;
+  else
+    {
+    cout << "Failed!" << endl;
+    return EXIT_FAILURE;
+    }
+
+  splitTreeFilter->Delete();
   areaSpectrumFilter->Delete();
   surfaceSkeletonFilter->Delete();
   surfaceSimplification->Delete();
   surfaceReebGraphFilter->Delete();
   surfaceScalarField->Delete();
   surfaceMesh->Delete();
+
 
 
 
@@ -4808,6 +4834,26 @@ int TestReebGraph( int argc, char* argv[] )
     cout << "Failed!" << endl;
     return EXIT_FAILURE;
     }
+
+  cout << "   Test 3D.6 Reeb graph to join tree filter..." << endl;
+  vtkReebGraphToJoinSplitTreeFilter *joinTreeFilter =
+    vtkReebGraphToJoinSplitTreeFilter::New();
+  joinTreeFilter->SetInput(0, volumeMesh);
+  joinTreeFilter->SetInput(1, simplifiedVolumeReebGraph);
+  joinTreeFilter->SetIsSplitTree(true);
+  joinTreeFilter->Update();
+  vtkReebGraph *joinTree = joinTreeFilter->GetOutput();
+  DisplayReebGraph(joinTree);
+  cout << "      Test 3D.6 ";
+  if(joinTree->GetNumberOfEdges() == 1)
+    cout << "OK!" << endl;
+  else
+    {
+    cout << "Failed!" << endl;
+    return EXIT_FAILURE;
+    }
+
+  joinTreeFilter->Delete();
 
   volumeSpectrumFilter->Delete();
   volumeSkeletonFilter->Delete();
